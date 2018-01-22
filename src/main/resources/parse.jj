@@ -1,8 +1,93 @@
-  options{
+
+
+options{
     STATIC = false;
-  }
+}
+
+PARSER_BEGIN(Adder)   // 跳过错误，先暂时这样写
+import java.io.*;
+class Adder {
+
+    public static void main(String[] args) {
+        for(String arg : args) {
+            try{
+                System.out.println(evaluate(arg));
+            }catch(Exception e){
+                System.err.println(e.getMessage());
+            }
+        }
+    }
+
+    public static long evaluate(String src) throws ParseException {
+        Reader reader = new StringReader(src);
+        return new Adder(reader).expr();
+    }
+}
+
+PARSER_END(Adder)
 
 
-  token{
+// 空白符, 这里使用的是 SPECIAL_TOKEN 指令，而不是 SKIP 指令，好处是在生成 AST
+SPECIAL_TOKEN: {
+    < SPACES : ([" ","\t","\n","\r","\f"])+ >
+}
 
-  }
+
+// 跳过行注释
+SPECIAL_TOKEN: {
+    < LINE_COMMENT : "//" (~["\n","\r"])* (["\n","\r","\r\n"])? >
+}
+// 保留字
+TOKEN: {
+
+        // 类型说明保留字
+       < VOID : "void">
+    |  < CHAR : "char">
+    |  < SHORT : "short">
+    |  < INT : "int">
+    |  < LONG : "long">
+    |  < STRUCT : "struct">
+    |  < UNION : "union">
+    |  < ENUM : "enum">
+    |  < UNSIGNED : "unsigned">
+    |  < SIGNED : "signed">
+    |  < CONST : "const">
+
+    //  存储类型保留字
+
+    |  < STATIC : "static">
+    |  < EXTERN : "extern">
+
+    // 语句定义保留字
+    |  < IF : "if">
+    |  < ELSE : "else">
+    |  < SWITCH : "switch">
+    |  < CASE : "case">
+    |  < DEFAULT_ : "default">
+    |  < WHILE : "while">
+    |  < DO : "do">
+    |  < FOR : "for">
+    |  < RETURN : "return">
+    |  < BREAK : "break">
+    |  < CONTINUE : "continue">
+    |  < GOTO : "goto">
+    |  < TYPEDEF : "typedef">
+
+   // 长度运算符保留字
+
+    |  < SIZEOF : "sizeof">
+
+}
+
+// 标识符， 以小写字母、大写字符、下划线开头，后接任意位 小写字母、大写字母、下划线、数字
+TOKEN: {
+    < IDENTIFIER : ["a" - "z", "A" - "Z", "_"](["a" - "z", "A" - "Z", "_", "0" - "9"])* >
+}
+
+// 数值, 十进制、十六进制、八进制, U 表示 无符号数， L 表示 长整数
+TOKEN: {
+    < INTEGER : ["1" - "9"] (["0" - "9"])* ("U")? ("L")?
+                | "0" ["x","X"] (["0" - "9","A" - "F", "a" - "f"])+ ("U")? ("L")?
+                | "0" (["0" - "7"])* ("U")? ("L")? >
+}
+
