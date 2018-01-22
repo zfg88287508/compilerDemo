@@ -1,0 +1,57 @@
+
+// javacc 的选项
+options {
+	// JDK_VERSION = "1.8";
+    STATIC = false;
+}
+
+//解析器类名
+PARSER_BEGIN(Adder)
+import java.io.*;
+class Adder {
+
+    public static void main(String[] args) {
+        for(String arg : args) {
+            try{
+                System.out.println(evaluate(arg));
+            }catch(Exception e){
+                System.err.println(e.getMessage());
+            }
+        }
+    }
+
+    public static long evaluate(String src) throws ParseException {
+        Reader reader = new StringReader(src);
+        return new Adder(reader).expr();
+    }
+}
+
+PARSER_END(Adder)
+
+// 配置扫描器
+
+SKIP: { <[" ","\t","\r","\n"]> }
+
+TOKEN: {<INTEGER: (["0"-"9"])+>}
+
+long expr():
+    {
+        Token x, y;
+    }
+
+    {
+        x=<INTEGER> "+" y=<INTEGER> <EOF>
+        {
+            return Long.parseLong(x.image) + Long.parseLong(y.image);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
