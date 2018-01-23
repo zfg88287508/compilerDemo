@@ -32,6 +32,13 @@ SPECIAL_TOKEN: {
     < SPACES : ([" ","\t","\n","\r","\f"])+ >
 }
 
+// 块注释 more 指令可以将一个 token 分割成多条词法规则来描述,下面的写法是基于状态转移的写法
+// 词法分析器扫描到 /* 之后会跳转到 IN_BLOCK_COMMENT 标识的两条规则进行进一步扫描。当扫描到 */ 就会退出当前的规则，回到一开始的状态
+// 解决了 块注释最长匹配的问题，以及扫描不完整识别不出的问题
+MORE: {<"/*"> : IN_BLOCK_COMMENT}
+<IN_BLOCK_COMMENT> MORE: {<~[]>}
+<IN_BLOCK_COMMENT> SPECIAL_TOKEN: {<BLOCK_COMMENT : "*/"> : DEFAULT}
+
 
 // 跳过行注释
 SPECIAL_TOKEN: {
@@ -90,4 +97,29 @@ TOKEN: {
                 | "0" ["x","X"] (["0" - "9","A" - "F", "a" - "f"])+ ("U")? ("L")?
                 | "0" (["0" - "7"])* ("U")? ("L")? >
 }
+
+ // 扫描字符, \172 这种表示方式是 ascii 的字符表示方式
+ MORE: {<"'"> : IN_CHARACTER}
+ <IN_CHARACTER> MORE: {
+        <~["'", "\\", "\n", "\r"]> : CHARACTER_TERM
+      | <"\\" (["0" - "7"]){3}> : CHARACTER_TERM
+      | <"\\" ~[]> : CHARACTER_TERM
+ }
+ <CHARACTER_TERM> TOKEN: {<CHARACTER : "'" > : DEFAULT}
+
+// 扫描字符串
+ MORE: {<"\""> : IN_STRING}
+ <IN_STRING> MORE: {
+      <(~["\"", "\\", "\n", "\r"])+>
+    | <"\\" (["0" - "7"])>
+    | <"\\" ~[]>
+ }
+ <IN_STRING> TOKEN: {<STRING : "\""> : DEFAULT}
+
+
+   //--------------------------------------------- 语法分析 -----------------------------------------------//
+
+
+
+
 
